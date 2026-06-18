@@ -1,0 +1,5 @@
+ticker,date,indicator,value,unit,period,source,url,memory_readthrough
+DELL,2026-06-17,AI server orders/backlog commentary,,text,latest,SEC filing or earnings material,https://www.sec.gov/edgar/browse/?CIK=1571996,Track disclosed AI server orders and backlog for HBM/server DRAM demand
+HPE,2026-06-01,AI systems orders/backlog commentary,,text,latest,SEC filing or earnings material,https://www.sec.gov/edgar/browse/?CIK=1645590,Track disclosed AI/HPC systems backlog for server memory demand
+AVGO,2026-06-18,AI semiconductor revenue/backlog commentary,,text,latest,SEC filing or earnings material,https://www.sec.gov/edgar/browse/?CIK=1730168,Track custom accelerator and networking demand as AI infrastructure proxy
+ORCL,2026-06-01,Remaining performance obligations / OCI demand,,text,latest,SEC filing or earnings material,https://www.sec.gov/edgar/browse/?CIK=1341439,Track OCI cloud bookings and GPU cluster demand
