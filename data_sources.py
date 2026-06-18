@@ -111,10 +111,66 @@ def _facts_for_tags(facts: dict[str, Any], concept: dict[str, Any]) -> list[dict
                         "value": float(value),
                         "form": form,
                         "filed": fact.get("filed", ""),
+                        "start": fact.get("start", ""),
+                        "end": fact.get("end", ""),
+                        "fy": fact.get("fy"),
+                        "fp": fact.get("fp"),
                         "tag": tag,
                     }
                 )
     return results
+
+
+def _duration_days(row: pd.Series) -> int | None:
+    start = pd.to_datetime(row.get("start"), errors="coerce")
+    end = pd.to_datetime(row.get("end"), errors="coerce")
+    if pd.isna(start) or pd.isna(end):
+        return None
+    return int((end - start).days)
+
+
+def normalize_flow_metrics(data: pd.DataFrame) -> pd.DataFrame:
+    if data.empty:
+        return data
+
+    data = data.copy()
+    data["value_raw"] = data["value"]
+    data["duration_days"] = data.apply(_duration_days, axis=1)
+    data["normalization"] = "as reported"
+
+    flow_metrics = {"capex", "revenue"}
+    normalized_groups: list[pd.DataFrame] = []
+
+    for _, group in data.groupby(["ticker", "metric", "tag", "fy"], dropna=False):
+        group = group.sort_values(["fy", "period", "filed"]).copy()
+        if group["metric"].iloc[0] not in flow_metrics:
+            normalized_groups.append(group)
+            continue
+
+        previous_cumulative: float | None = None
+        previous_fy = None
+        for idx, row in group.iterrows():
+            duration = row.get("duration_days")
+            fy = row.get("fy")
+            is_cumulative = duration is not None and duration > 120
+            if previous_fy != fy:
+                previous_cumulative = None
+                previous_fy = fy
+
+            if is_cumulative and previous_cumulative is not None:
+                group.at[idx, "value"] = row["value_raw"] - previous_cumulative
+                group.at[idx, "normalization"] = "YTD converted to quarter"
+            elif is_cumulative:
+                group.at[idx, "normalization"] = "YTD first period"
+
+            if is_cumulative:
+                previous_cumulative = row["value_raw"]
+            elif row.get("fp") == "Q1":
+                previous_cumulative = row["value_raw"]
+
+        normalized_groups.append(group)
+
+    return pd.concat(normalized_groups, ignore_index=True)
 
 
 def load_metrics() -> tuple[pd.DataFrame, str]:
@@ -135,6 +191,10 @@ def load_metrics() -> tuple[pd.DataFrame, str]:
                         "period": fact["period"],
                         "value": fact["value"],
                         "filed": fact["filed"],
+                        "start": fact["start"],
+                        "end": fact["end"],
+                        "fy": fact["fy"],
+                        "fp": fact["fp"],
                         "tag": fact["tag"],
                         "source": "SEC XBRL",
                     }
@@ -154,6 +214,7 @@ def load_metrics() -> tuple[pd.DataFrame, str]:
     data = pd.DataFrame(rows)
     data = data.sort_values(["ticker", "metric", "period", "filed"])
     data = data.drop_duplicates(["ticker", "metric", "period"], keep="last")
+    data = normalize_flow_metrics(data)
     return data, "live"
 
 
