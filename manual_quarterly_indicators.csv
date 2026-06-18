@@ -2,16 +2,31 @@ ticker,company,group,period,indicator,value,unit,source,url,note
 ORCL,Oracle,Hyperscaler,FY26Q4,rpo,638.0,USD_BN,사용자 HTML 보고서,,Oracle FY26Q4 RPO
 ORCL,Oracle,Hyperscaler,FY26Q4,cloud_revenue,9.913,USD_BN,사용자 HTML 보고서,,Cloud revenue
 ORCL,Oracle,Hyperscaler,FY26Q4,iaas_revenue,5.8,USD_BN,사용자 HTML 보고서,,IaaS revenue
+ORCL,Oracle,Hyperscaler,FY26Q4,capex_fy,55.7,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.investors.com/news/technology/oracle-earnings-orcl-news-may-2026/,FY2026 capex
+ORCL,Oracle,Hyperscaler,FY27E,capex_guidance_high,95.0,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.marketwatch.com/story/oracles-stock-slides-after-earnings-as-the-steep-price-of-ai-spooks-investors-0653b309,FY2027 capex upper guide
 CW,CoreWeave,NeoCloud,2026E,capex_low,31.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance low
 CW,CoreWeave,NeoCloud,2026E,capex_high,35.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance high
 CW,CoreWeave,NeoCloud,latest,ai_backlog,99.4,USD_BN,사용자 HTML 보고서,,Reported/proxy backlog
+CW,CoreWeave,NeoCloud,2026Q1,revenue,2.08,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.marketwatch.com/story/coreweave-reports-unprecedented-100-billion-backlog-but-that-comes-at-a-cost-98b385c7,Q1 revenue
+CW,CoreWeave,NeoCloud,2026Q1,capex,6.8,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.marketwatch.com/story/coreweave-reports-unprecedented-100-billion-backlog-but-that-comes-at-a-cost-98b385c7,Q1 capex
+CW,CoreWeave,NeoCloud,2026Q1,ai_backlog,99.4,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.marketwatch.com/story/coreweave-reports-unprecedented-100-billion-backlog-but-that-comes-at-a-cost-98b385c7,Q1 revenue backlog
 NBIS,Nebius,NeoCloud,2026E,capex_low,20.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance low
 NBIS,Nebius,NeoCloud,2026E,capex_high,25.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance high
-DELL,Dell Technologies,AI server OEM,latest,ai_backlog,51.3,USD_BN,사용자 HTML 보고서,,AI infra/server backlog proxy
+DELL,Dell Technologies,AI server OEM,FY26Q1,total_revenue,23.38,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.investopedia.com/dell-earnings-q1-fy2026-11743321,Q1 FY2026 total revenue
+DELL,Dell Technologies,AI server OEM,FY26Q1,servers_networking_revenue,6.3,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.investopedia.com/dell-earnings-q1-fy2026-11743321,Servers and networking revenue
+DELL,Dell Technologies,AI server OEM,FY26Q1,ai_orders,12.1,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.investopedia.com/dell-earnings-q1-fy2026-11743321,AI server orders
+DELL,Dell Technologies,AI server OEM,FY26Q1,ai_backlog,14.4,USD_BN,보조 보도 검증,https://www.itpro.com/hardware/everything-you-need-to-know-about-dell,AI infrastructure backlog; official IR 재확인 권장
 HPE,Hewlett Packard Enterprise,AI server OEM,FY25Q2,ai_backlog,3.2,USD_BN,사용자 HTML 보고서,,AI systems backlog proxy
 HPE,Hewlett Packard Enterprise,AI server OEM,FY25Q3,ai_backlog,3.7,USD_BN,사용자 HTML 보고서,,AI systems backlog
 HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q1,ai_backlog,5.0,USD_BN,사용자 HTML 보고서,,AI systems backlog greater than 5bn
 HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,ai_backlog,6.1,USD_BN,사용자 HTML 보고서,,AI systems backlog midpoint of 5.9-6.3bn
 HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,ai_orders,1.8,USD_BN,사용자 HTML 보고서,,AI systems orders
+HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,total_revenue,10.68,USD_BN,실적 보도 검증,https://www.businessinsider.com/hewlett-packard-hpe-stock-price-tech-earnings-rally-ai-2026-6,Q2 FY2026 revenue
+HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,cloud_ai_revenue_proxy,8.0,USD_BN,실적 보도 검증,https://www.businessinsider.com/hewlett-packard-hpe-stock-price-tech-earnings-rally-ai-2026-6,Cloud and AI driven revenue proxy; official IR 재확인 권장
 AVGO,Broadcom,AI silicon/networking,latest,ai_semiconductor_revenue,10.8,USD_BN,사용자 HTML 보고서,,AI semiconductor revenue
 AVGO,Broadcom,AI silicon/networking,Q3E,ai_semiconductor_revenue,16.0,USD_BN,사용자 HTML 보고서,,Q3 estimate from report
+AVGO,Broadcom,AI silicon/networking,FY26Q2,total_revenue,22.19,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.barrons.com/articles/broadcom-earnings-stock-price-278daece,Fiscal Q2 total revenue
+AVGO,Broadcom,AI silicon/networking,FY26Q2,semiconductor_revenue,15.0,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.barrons.com/articles/broadcom-earnings-stock-price-278daece,Semiconductor solutions revenue
+AVGO,Broadcom,AI silicon/networking,FY26Q2,ai_semiconductor_revenue,10.8,USD_BN,실적 보도/컨퍼런스콜 검증,https://www.barrons.com/articles/broadcom-earnings-stock-price-278daece,AI semiconductor revenue
+AVGO,Broadcom,AI silicon/networking,FY26Q2,non_ai_semiconductor_revenue,4.2,USD_BN,계산값,https://www.barrons.com/articles/broadcom-earnings-stock-price-278daece,Semiconductor revenue minus AI semiconductor revenue
+AVGO,Broadcom,AI silicon/networking,FY26Q2,infrastructure_software_revenue,7.19,USD_BN,계산값,https://www.barrons.com/articles/broadcom-earnings-stock-price-278daece,Total revenue minus semiconductor revenue
