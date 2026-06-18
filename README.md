@@ -1,6 +1,6 @@
 # AI 인프라 메모리 레이더
 
-메모리 반도체 투자자를 위한 Streamlit 대시보드입니다. 공개 AI 인프라 지표(컨퍼런스콜, 실적발표 등)를 계속 추적합니다.
+메모리 반도체 투자자를 위한 Streamlit 대시보드입니다. 공개 AI 인프라 지표를 계속 추적합니다.
 
 ## 추적 대상
 
@@ -11,6 +11,7 @@
 - SEC EDGAR 최신 공시
 - `manual_indicators.csv`에 관리하는 AI 수주잔고/주문 코멘트
 - `manual_quarterly_indicators.csv`에 관리하는 RPO, 수주잔고, AI 주문, NeoCloud CAPEX 같은 수동 분기 지표
+- `company_report_series.csv`에 관리하는 Dell/HPE/Oracle 회사별 리포트형 시계열
 
 ## 데이터 업데이트
 
