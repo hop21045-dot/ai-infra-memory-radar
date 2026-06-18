@@ -222,6 +222,37 @@ def manual_comparison_table(data: pd.DataFrame, indicators: list[str]) -> pd.Dat
     return rows.pivot_table(index=["ticker", "company"], columns=["period", "indicator"], values="표시값", aggfunc="last")
 
 
+def ai_non_ai_rows(data: pd.DataFrame) -> pd.DataFrame:
+    indicators = [
+        "total_revenue",
+        "servers_networking_revenue",
+        "cloud_ai_revenue_proxy",
+        "semiconductor_revenue",
+        "ai_semiconductor_revenue",
+        "non_ai_semiconductor_revenue",
+        "infrastructure_software_revenue",
+        "ai_orders",
+        "ai_backlog",
+    ]
+    rows = data[data["indicator"].isin(indicators)].copy()
+    if rows.empty:
+        return rows
+    rows["표시값"] = rows.apply(lambda row: format_manual_value(row["value"], row["unit"]), axis=1)
+    label_map = {
+        "total_revenue": "총매출",
+        "servers_networking_revenue": "서버/네트워킹 매출",
+        "cloud_ai_revenue_proxy": "Cloud/AI 매출 proxy",
+        "semiconductor_revenue": "반도체 매출",
+        "ai_semiconductor_revenue": "AI 반도체 매출",
+        "non_ai_semiconductor_revenue": "비AI 반도체 매출",
+        "infrastructure_software_revenue": "인프라 소프트웨어 매출",
+        "ai_orders": "AI 주문",
+        "ai_backlog": "AI 수주잔고",
+    }
+    rows["지표"] = rows["indicator"].map(label_map).fillna(rows["indicator"])
+    return rows
+
+
 st.title("AI 인프라 메모리 레이더")
 st.caption("메모리 반도체 투자자를 위한 공개 데이터 대시보드: 하이퍼스케일러 설비투자, AI 서버 수요, AI 반도체/네트워킹, 최신 SEC 공시를 추적합니다.")
 
@@ -273,8 +304,8 @@ top_cols[3].metric("최근 SEC 공시", filing_count)
 if mode != "live":
     st.warning("SEC 실시간 조회가 실패해 샘플 데이터를 표시하고 있습니다. 네트워크 또는 SEC 요청 제한을 확인하세요.")
 
-tab_overview, tab_chain, tab_quarterly, tab_company, tab_backlog, tab_filings, tab_method = st.tabs(
-    ["요약", "AI 인프라 체인", "분기별 비교", "기업별 상세", "수주/주문 코멘트", "최신 공시", "방법론"]
+tab_overview, tab_chain, tab_quarterly, tab_ai_split, tab_company, tab_backlog, tab_filings, tab_method = st.tabs(
+    ["요약", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "기업별 상세", "수주/주문 코멘트", "최신 공시", "방법론"]
 )
 
 with tab_overview:
@@ -362,6 +393,39 @@ with tab_quarterly:
             width="stretch",
             hide_index=True,
         )
+
+with tab_ai_split:
+    st.subheader("Dell / HPE / Broadcom AI vs 비AI")
+    st.write(
+        "Dell과 HPE는 AI 주문·수주잔고 중심으로 분리하고, Broadcom은 AI 반도체 매출과 비AI 반도체 매출을 분리합니다. "
+        "일부 값은 회사가 표준 재무항목으로 공시하지 않아 실적자료/컨퍼런스콜 기반 수동 지표 또는 계산값입니다."
+    )
+    split_rows = ai_non_ai_rows(manual_quarterly)
+    if split_rows.empty:
+        st.info("AI/비AI 분리 지표가 없습니다.")
+    else:
+        split_view = split_rows[["ticker", "company", "period", "지표", "표시값", "source", "url", "note"]].rename(
+            columns={
+                "ticker": "티커",
+                "company": "기업",
+                "period": "분기",
+                "source": "출처",
+                "url": "링크",
+                "note": "비고",
+            }
+        )
+        st.dataframe(
+            split_view,
+            column_config={"링크": st.column_config.LinkColumn("출처 링크")},
+            width="stretch",
+            hide_index=True,
+        )
+
+        chart_source = split_rows[split_rows["indicator"].isin(["ai_semiconductor_revenue", "non_ai_semiconductor_revenue", "infrastructure_software_revenue"])]
+        if not chart_source.empty:
+            st.subheader("Broadcom 매출 분해")
+            chart = chart_source.pivot_table(index="period", columns="지표", values="value", aggfunc="last").sort_index()
+            st.bar_chart(chart, width="stretch")
 
 with tab_company:
     tickers = [company["ticker"] for company in COMPANIES if company["group"] in selected_groups]
