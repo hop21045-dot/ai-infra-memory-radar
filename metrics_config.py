@@ -88,7 +88,6 @@ CONCEPTS = {
         "tags": [
             "PaymentsToAcquirePropertyPlantAndEquipment",
             "PaymentsToAcquireProductiveAssets",
-            "CapitalExpendituresIncurredButNotYetPaid",
         ],
         "statement": "현금흐름표",
         "unit": "USD",
