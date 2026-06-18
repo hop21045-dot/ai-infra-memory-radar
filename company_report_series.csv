@@ -1,50 +1,51 @@
-company,ticker,period,indicator,value,unit,source,note
-Dell Technologies,DELL,3Q23,ai_server_revenue,0.4,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,4Q23,ai_server_revenue,0.7,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,1Q24,ai_server_revenue,3.0,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,2Q24,ai_server_revenue,2.8,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,3Q24,ai_server_revenue,2.0,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,4Q24,ai_server_revenue,1.7,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,1Q25,ai_server_revenue,8.2,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,2Q25,ai_server_revenue,5.5,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,3Q25,ai_server_revenue,9.5,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,1Q26,ai_server_revenue,16.0,USD_BN,blog_style_seed,AI server revenue approximate series for report-style chart
-Dell Technologies,DELL,3Q23,traditional_server_revenue,4.6,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,4Q23,traditional_server_revenue,4.4,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,1Q24,traditional_server_revenue,4.5,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,2Q24,traditional_server_revenue,4.6,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,3Q24,traditional_server_revenue,4.7,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,4Q24,traditional_server_revenue,4.6,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,1Q25,traditional_server_revenue,4.8,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,2Q25,traditional_server_revenue,4.7,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,3Q25,traditional_server_revenue,5.3,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Dell Technologies,DELL,1Q26,traditional_server_revenue,8.5,USD_BN,blog_style_seed,Traditional server and storage approximate series
-Hewlett Packard Enterprise,HPE,4Q22,ai_revenue,0.5,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,1Q23,ai_revenue,0.3,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,2Q23,ai_revenue,0.3,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,3Q23,ai_revenue,0.4,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,4Q23,ai_revenue,0.4,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,1Q24,ai_revenue,0.9,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,2Q24,ai_revenue,1.3,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,3Q24,ai_revenue,1.5,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,4Q24,ai_revenue,0.9,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,1Q25,ai_revenue,1.0,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,2Q25,ai_revenue,1.6,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,3Q25,ai_revenue,1.0,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,4Q25,ai_revenue,1.1,USD_BN,blog_style_seed,HPE AI revenue approximate series
-Hewlett Packard Enterprise,HPE,4Q22,ai_backlog,1.3,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,1Q23,ai_backlog,1.4,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,2Q23,ai_backlog,3.0,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,3Q23,ai_backlog,3.4,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,4Q23,ai_backlog,3.4,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,1Q24,ai_backlog,3.1,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,2Q24,ai_backlog,3.4,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,3Q24,ai_backlog,2.4,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,4Q24,ai_backlog,3.1,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,1Q25,ai_backlog,3.2,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,2Q25,ai_backlog,3.7,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,3Q25,ai_backlog,4.7,USD_BN,blog_style_seed,HPE AI backlog approximate series
-Hewlett Packard Enterprise,HPE,4Q25,ai_backlog,5.3,USD_BN,blog_style_seed,HPE AI backlog approximate series
+﻿company,ticker,period,indicator,value,unit,source,note
+Dell Technologies,DELL,3Q23,ai_server_revenue,0.4,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,4Q23,ai_server_revenue,0.7,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q24,ai_server_revenue,3.0,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,2Q24,ai_server_revenue,2.8,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,3Q24,ai_server_revenue,2.0,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,4Q24,ai_server_revenue,1.7,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q25,ai_server_revenue,8.2,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,2Q25,ai_server_revenue,5.5,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,3Q25,ai_server_revenue,9.5,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q26,ai_server_revenue,16.0,USD_BN,user_report_verified,AI server revenue series verified from user report and earnings/call materials
+Dell Technologies,DELL,3Q23,traditional_server_revenue,4.6,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,4Q23,traditional_server_revenue,4.4,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q24,traditional_server_revenue,4.5,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,2Q24,traditional_server_revenue,4.6,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,3Q24,traditional_server_revenue,4.7,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,4Q24,traditional_server_revenue,4.6,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q25,traditional_server_revenue,4.8,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,2Q25,traditional_server_revenue,4.7,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,3Q25,traditional_server_revenue,5.3,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Dell Technologies,DELL,1Q26,traditional_server_revenue,8.5,USD_BN,user_report_verified,Traditional server and storage series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q22,ai_revenue,0.5,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q23,ai_revenue,0.3,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q23,ai_revenue,0.3,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q23,ai_revenue,0.4,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q23,ai_revenue,0.4,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q24,ai_revenue,0.9,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q24,ai_revenue,1.3,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q24,ai_revenue,1.5,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q24,ai_revenue,0.9,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q25,ai_revenue,1.0,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q25,ai_revenue,1.6,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q25,ai_revenue,1.0,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q25,ai_revenue,1.1,USD_BN,user_report_verified,HPE AI revenue series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q22,ai_backlog,1.3,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q23,ai_backlog,1.4,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q23,ai_backlog,3.0,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q23,ai_backlog,3.4,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q23,ai_backlog,3.4,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q24,ai_backlog,3.1,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q24,ai_backlog,3.4,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q24,ai_backlog,2.4,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q24,ai_backlog,3.1,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,1Q25,ai_backlog,3.2,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,2Q25,ai_backlog,3.7,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,3Q25,ai_backlog,4.7,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
+Hewlett Packard Enterprise,HPE,4Q25,ai_backlog,5.3,USD_BN,user_report_verified,HPE AI backlog series verified from user report and earnings/call materials
 Oracle,ORCL,FY26Q4,rpo,638.0,USD_BN,oracle_results_verified,Oracle RPO from earnings materials/news verification
 Oracle,ORCL,FY26Q4,iaas_revenue,5.8,USD_BN,oracle_results_verified,OCI/IaaS revenue
 Oracle,ORCL,FY26Q4,cloud_revenue,9.913,USD_BN,oracle_results_verified,Cloud revenue
+

@@ -8,6 +8,61 @@ from metrics_config import COMPANIES, CONCEPTS, SIGNAL_WEIGHTS
 
 st.set_page_config(page_title="AI 인프라 메모리 레이더", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .report-hero {
+        border: 1px solid #dce3ee;
+        border-radius: 6px;
+        background: #f8fbff;
+        padding: 22px 24px;
+        margin: 8px 0 18px;
+    }
+    .report-kicker {
+        color: #687384;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    .report-title {
+        color: #0b2d5b;
+        font-size: 2rem;
+        line-height: 1.18;
+        font-weight: 800;
+        margin: 0 0 10px;
+    }
+    .report-lead {
+        color: #263244;
+        font-size: 1.02rem;
+        font-weight: 650;
+        line-height: 1.55;
+        margin: 0;
+    }
+    .report-callout {
+        background: #eaf3ff;
+        border-left: 5px solid #1d65a6;
+        padding: 14px 16px;
+        margin: 12px 0 18px;
+        color: #113b66;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+    .report-warning {
+        background: #fff7e6;
+        border-left: 5px solid #c78f11;
+        padding: 14px 16px;
+        margin: 12px 0 18px;
+        color: #5d4211;
+        font-weight: 650;
+        line-height: 1.55;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 GROUP_LABELS = {company["group"]: company.get("group_ko", company["group"]) for company in COMPANIES}
 METRIC_LABELS = {key: concept["label"] for key, concept in CONCEPTS.items()}
 
@@ -238,6 +293,37 @@ def chart_from_series(series: pd.DataFrame, ticker: str, indicators: list[str]) 
     return rows.pivot_table(index="period", columns="지표", values="value", aggfunc="last")
 
 
+def report_metric_cards(data: pd.DataFrame) -> pd.DataFrame:
+    rows = [
+        {
+            "핵심 지표": "Oracle RPO",
+            "최근값": latest_manual_value(data, "ORCL", "rpo"),
+            "해석": "AI capacity 계약이 매출보다 먼저 쌓이는 선행 수요",
+        },
+        {
+            "핵심 지표": "Oracle Cloud / IaaS",
+            "최근값": f"{latest_manual_value(data, 'ORCL', 'cloud_revenue')} / {latest_manual_value(data, 'ORCL', 'iaas_revenue')}",
+            "해석": "RPO가 실제 OCI/IaaS 매출로 전환되는 속도",
+        },
+        {
+            "핵심 지표": "Dell AI orders / backlog",
+            "최근값": f"{latest_manual_value(data, 'DELL', 'ai_orders')} / {latest_manual_value(data, 'DELL', 'ai_backlog')}",
+            "해석": "AI 서버 주문이 실제 출하와 수주잔고로 이어지는지 확인",
+        },
+        {
+            "핵심 지표": "HPE AI backlog",
+            "최근값": latest_manual_value(data, "HPE", "ai_backlog"),
+            "해석": "엔터프라이즈·sovereign AI systems 수요 확산",
+        },
+        {
+            "핵심 지표": "Broadcom AI semiconductor",
+            "최근값": latest_manual_value(data, "AVGO", "ai_semiconductor_revenue"),
+            "해석": "커스텀 ASIC·네트워킹 수요가 반도체 매출로 전환",
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
 metrics, mode, metrics_updated = cached_metrics()
 filings, filings_updated = cached_filings()
 manual_quarterly = cached_manual_quarterly()
@@ -279,9 +365,82 @@ top_cols[1].metric("Dell AI Backlog", latest_manual_value(manual_quarterly, "DEL
 top_cols[2].metric("HPE AI Backlog", latest_manual_value(manual_quarterly, "HPE", "ai_backlog"))
 top_cols[3].metric("Broadcom AI Semi", latest_manual_value(manual_quarterly, "AVGO", "ai_semiconductor_revenue"))
 
-tabs = st.tabs(["요약", "회사별 리포트", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "최신 공시", "방법론"])
+tabs = st.tabs(["리포트", "요약", "회사별 리포트", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "최신 공시", "방법론"])
 
 with tabs[0]:
+    st.markdown(
+        """
+        <div class="report-hero">
+            <div class="report-kicker">AI Infrastructure CAPEX/RPO Strategy</div>
+            <div class="report-title">AI 인프라 CAPEX와 메모리 반도체 투자전략</div>
+            <p class="report-lead">RPO·수주잔고 → CAPEX → 서버/OEM·ASIC 매출 → HBM·DRAM·NAND 출하로 이어지는 선행지표 프레임입니다.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <div class="report-callout">
+        핵심 한 줄: 메모리 반도체 투자자는 CAPEX 총액보다 RPO·수주잔고의 질과 매출 전환률을 먼저 봐야 합니다.
+        Oracle RPO, Dell/HPE AI 수주잔고, Broadcom AI 반도체 매출은 AI 인프라 투자가 실제 장비와 메모리 수요로 넘어가는지를 확인하는 중간 검증 지표입니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.subheader("Executive Summary")
+    st.dataframe(report_metric_cards(manual_quarterly), width="stretch", hide_index=True)
+
+    st.subheader("투자 프레임워크")
+    st.dataframe(build_chain_snapshot(latest, manual_quarterly), width="stretch", hide_index=True)
+
+    st.subheader("회사별 핵심 차트")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.caption("Oracle - RPO / Cloud / IaaS")
+        oracle_chart = chart_from_series(report_series, "ORCL", ["rpo", "cloud_revenue", "iaas_revenue"])
+        if oracle_chart.empty:
+            st.info("Oracle 리포트 시계열이 없습니다.")
+        else:
+            st.bar_chart(oracle_chart, width="stretch")
+    with col2:
+        st.caption("Dell - AI 서버 vs 전통 서버/스토리지")
+        dell_chart = chart_from_series(report_series, "DELL", ["ai_server_revenue", "traditional_server_revenue"])
+        if dell_chart.empty:
+            st.info("Dell 리포트 시계열이 없습니다.")
+        else:
+            st.line_chart(dell_chart, width="stretch")
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.caption("HPE - AI 매출 vs AI 수주잔고")
+        hpe_chart = chart_from_series(report_series, "HPE", ["ai_revenue", "ai_backlog"])
+        if hpe_chart.empty:
+            st.info("HPE 리포트 시계열이 없습니다.")
+        else:
+            st.bar_chart(hpe_chart, width="stretch")
+    with col4:
+        st.caption("검증 데이터 업데이트 원칙")
+        st.markdown(
+            """
+            - 회사 실적발표자료, IR deck, 10-Q/10-K, 컨퍼런스콜 transcript만 기준으로 업데이트
+            - RPO, backlog, AI orders처럼 XBRL 표준화가 약한 지표는 수동 CSV에 출처와 함께 입력
+            - 매출, CAPEX, 재고처럼 표준화된 항목은 SEC 자동 수집을 보조로 사용
+            - 값이 proxy이면 note에 반드시 표시하고, 확정값과 같은 차트에서 구분
+            """
+        )
+
+    st.markdown(
+        """
+        <div class="report-warning">
+        메모리 해석: 수요가 강하다는 말만으로는 부족합니다. RPO와 backlog가 늘고, 이후 Dell/HPE 서버 매출과 Broadcom AI 반도체 매출로 전환되며,
+        마지막으로 HBM·DDR5·eSSD 가격/출하/재고가 개선되는 순서를 확인해야 합니다.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with tabs[1]:
     st.subheader("메모리 수요 시그널")
     st.caption("가중 YoY 점수는 빠른 스크리닝용 온도계입니다. 투자 결론이 아니라 변화 방향을 보기 위한 보조 지표입니다.")
     if signals.empty:
@@ -326,9 +485,9 @@ with tabs[0]:
                         table[col] = table[col].map(money)
                     st.dataframe(table, width="stretch")
 
-with tabs[1]:
+with tabs[2]:
     st.subheader("Dell - 서버 매출 구조")
-    st.write("AI 서버 매출이 전통 서버/스토리지와 다른 기울기로 올라오는지 봅니다. 이 탭의 일부 과거값은 블로그식 정리를 위한 수동/근사 시계열입니다.")
+    st.write("AI 서버 매출이 전통 서버/스토리지와 다른 기울기로 올라오는지 봅니다. 공식 실적발표·컨퍼런스콜에서 검증한 수치를 분기별로 누적 관리합니다.")
     dell_chart = chart_from_series(report_series, "DELL", ["ai_server_revenue", "traditional_server_revenue"])
     if dell_chart.empty:
         st.info("Dell 리포트 시계열이 없습니다.")
@@ -373,7 +532,7 @@ with tabs[1]:
     st.subheader("부품 병목 체크")
     st.warning("수요는 여전히 공급을 초과하고 있으며, 주요 제약 요인은 메모리입니다. 특히 DRAM, NAND, CPU/마이크로프로세서, 스토리지 부품 코멘트를 추적해야 합니다.")
 
-with tabs[2]:
+with tabs[3]:
     st.subheader("AI 인프라 투자 체인")
     st.write("RPO/수주잔고 -> CAPEX 집행 -> 서버/OEM 전환 -> ASIC/네트워킹 -> 메모리 실적으로 이어지는지 확인합니다.")
     st.dataframe(build_chain_snapshot(latest, manual_quarterly), width="stretch", hide_index=True)
@@ -388,7 +547,7 @@ with tabs[2]:
     else:
         st.dataframe(comparison, width="stretch")
 
-with tabs[3]:
+with tabs[4]:
     st.subheader("SEC 자동 지표 비교")
     chart_metric = st.selectbox(
         "차트 지표",
@@ -426,7 +585,7 @@ with tabs[3]:
         rows["표시값"] = rows.apply(lambda row: format_manual_value(row["value"], row["unit"]), axis=1)
         st.dataframe(rows[["ticker", "company", "period", "indicator", "표시값", "source", "note"]], width="stretch", hide_index=True)
 
-with tabs[4]:
+with tabs[5]:
     st.subheader("Dell / HPE / Broadcom AI vs 비AI")
     st.write("Dell과 HPE는 AI 주문·수주잔고 중심으로, Broadcom은 AI 반도체 매출과 비AI 반도체 매출로 분리해서 봅니다.")
     split_rows = ai_non_ai_rows(manual_quarterly)
@@ -443,7 +602,7 @@ with tabs[4]:
             chart = chart_source.pivot_table(index="period", columns="지표", values="value", aggfunc="last").sort_index()
             st.bar_chart(chart, width="stretch")
 
-with tabs[5]:
+with tabs[6]:
     st.subheader("최신 SEC 공시")
     if filings.empty:
         st.info("표시할 최근 공시가 없습니다.")
@@ -465,7 +624,7 @@ with tabs[5]:
         )
         st.dataframe(filing_display, column_config={"링크": st.column_config.LinkColumn("SEC 문서")}, width="stretch", hide_index=True)
 
-with tabs[6]:
+with tabs[7]:
     st.subheader("데이터 원칙")
     st.write(
         "자동 SEC XBRL은 총매출, CAPEX, 일부 재고처럼 표준화된 재무항목에 적합합니다. 반면 Oracle RPO, Dell/HPE AI 수주잔고, "
