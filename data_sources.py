@@ -61,7 +61,11 @@ def load_latest_filings(limit_per_company: int = 6) -> pd.DataFrame:
             continue
 
     if not rows:
-        return pd.DataFrame(SEED_FILINGS)
+        seed = pd.DataFrame(SEED_FILINGS)
+        companies = pd.DataFrame(COMPANIES)
+        seed = seed.merge(companies[["ticker", "name", "group"]], on="ticker", how="left")
+        seed["company"] = seed["name"]
+        return seed.drop(columns=["name"])
     return pd.DataFrame(rows).sort_values("filed", ascending=False)
 
 
