@@ -71,14 +71,28 @@ def signal_table(latest: pd.DataFrame) -> pd.DataFrame:
                 "기업": company.get("name", ticker),
                 "분류": company.get("group_ko", company.get("group", "")),
                 "메모리 투자 관점": company.get("memory_angle", ""),
-                "시그널 점수": score,
+                "가중 YoY 점수": score * 100,
+                "판정": signal_label(score),
                 "최근 변화": ", ".join(parts) if parts else "태그된 과거 데이터가 더 필요함",
             }
         )
     result = pd.DataFrame(rows)
     if result.empty:
         return result
-    return result.sort_values("시그널 점수", ascending=False)
+    return result.sort_values("가중 YoY 점수", ascending=False)
+
+
+def signal_label(score: float) -> str:
+    score_pct = score * 100
+    if score_pct >= 20:
+        return "강한 개선"
+    if score_pct >= 5:
+        return "개선"
+    if score_pct > -5:
+        return "중립"
+    if score_pct > -20:
+        return "둔화"
+    return "강한 둔화"
 
 
 def flatten_chart_columns(data: pd.DataFrame) -> pd.DataFrame:
@@ -93,6 +107,13 @@ def flatten_chart_columns(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def quarterly_metric_table(data: pd.DataFrame, metric: str) -> pd.DataFrame:
+    rows = data[data["metric"] == metric].copy()
+    if rows.empty:
+        return pd.DataFrame()
+    return rows.pivot_table(index="period", columns="ticker", values="value", aggfunc="last").sort_index()
+
+
+def metric_quarterly_chart(data: pd.DataFrame, metric: str) -> pd.DataFrame:
     rows = data[data["metric"] == metric].copy()
     if rows.empty:
         return pd.DataFrame()
@@ -262,17 +283,27 @@ with tab_overview:
         st.info("아직 표시할 시그널 데이터가 없습니다.")
     else:
         display = signals.copy()
-        display["시그널 점수"] = display["시그널 점수"].map(lambda value: f"{value:,.2f}")
+        display["가중 YoY 점수"] = display["가중 YoY 점수"].map(lambda value: f"{value:,.1f}")
+        st.caption("가중 YoY 점수는 CAPEX, 매출, RPO, 재고의 전년 대비 변화를 가중합한 보조 온도계입니다. 숫자가 높을수록 메모리 수요에 우호적인 변화가 많다는 뜻입니다.")
         st.dataframe(display, width="stretch", hide_index=True)
 
-    st.subheader("분기별 추세")
-    chart_data = filtered.pivot_table(
-        index="period",
-        columns=["ticker", "metric"],
-        values="value",
-        aggfunc="last",
-    ).sort_index()
-    st.line_chart(flatten_chart_columns(chart_data), width="stretch")
+    st.subheader("지표별 분기 추세")
+    st.write("매출, CAPEX, RPO, 재고는 금액 규모가 달라 한 차트에 겹치면 해석이 어려워집니다. 지표별로 분리해서 비교합니다.")
+    if not selected_metrics:
+        st.info("사이드바에서 하나 이상의 지표를 선택하세요.")
+    else:
+        metric_tabs = st.tabs([METRIC_LABELS.get(metric, metric) for metric in selected_metrics])
+        for metric_tab, metric in zip(metric_tabs, selected_metrics):
+            with metric_tab:
+                chart_data = metric_quarterly_chart(filtered, metric)
+                if chart_data.empty:
+                    st.info(f"{METRIC_LABELS.get(metric, metric)} 데이터가 없습니다.")
+                else:
+                    st.line_chart(chart_data, width="stretch")
+                    table = chart_data.copy()
+                    for col in table.columns:
+                        table[col] = table[col].map(money)
+                    st.dataframe(table, width="stretch")
 
     st.subheader("최근 지표")
     latest_display = latest.copy()
@@ -426,6 +457,12 @@ with tab_method:
             }
         )
     st.dataframe(pd.DataFrame(concept_rows), width="stretch", hide_index=True)
+    st.subheader("가중 YoY 점수")
+    st.write(
+        "가중 YoY 점수는 투자 결론이 아니라 빠른 스크리닝용 온도계입니다. 현재는 CAPEX YoY 45%, 매출 YoY 25%, "
+        "RPO YoY 20%, 재고 YoY -10%를 더합니다. CAPEX, 매출, RPO 증가는 메모리 수요에 긍정적으로 보고, "
+        "재고 증가는 단기적으로 부정적으로 봅니다."
+    )
     st.subheader("해석 기준")
     st.write(
         "하이퍼스케일러 설비투자 증가, AI 서버 OEM 매출/수주잔고 증가, AI 네트워킹/커스텀 반도체 매출 증가, NVIDIA "
