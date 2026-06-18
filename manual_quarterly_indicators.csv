@@ -1,0 +1,17 @@
+ticker,company,group,period,indicator,value,unit,source,url,note
+ORCL,Oracle,Hyperscaler,FY26Q4,rpo,638.0,USD_BN,사용자 HTML 보고서,,Oracle FY26Q4 RPO
+ORCL,Oracle,Hyperscaler,FY26Q4,cloud_revenue,9.913,USD_BN,사용자 HTML 보고서,,Cloud revenue
+ORCL,Oracle,Hyperscaler,FY26Q4,iaas_revenue,5.8,USD_BN,사용자 HTML 보고서,,IaaS revenue
+CW,CoreWeave,NeoCloud,2026E,capex_low,31.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance low
+CW,CoreWeave,NeoCloud,2026E,capex_high,35.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance high
+CW,CoreWeave,NeoCloud,latest,ai_backlog,99.4,USD_BN,사용자 HTML 보고서,,Reported/proxy backlog
+NBIS,Nebius,NeoCloud,2026E,capex_low,20.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance low
+NBIS,Nebius,NeoCloud,2026E,capex_high,25.0,USD_BN,사용자 HTML 보고서,,2026 capex guidance high
+DELL,Dell Technologies,AI server OEM,latest,ai_backlog,51.3,USD_BN,사용자 HTML 보고서,,AI infra/server backlog proxy
+HPE,Hewlett Packard Enterprise,AI server OEM,FY25Q2,ai_backlog,3.2,USD_BN,사용자 HTML 보고서,,AI systems backlog proxy
+HPE,Hewlett Packard Enterprise,AI server OEM,FY25Q3,ai_backlog,3.7,USD_BN,사용자 HTML 보고서,,AI systems backlog
+HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q1,ai_backlog,5.0,USD_BN,사용자 HTML 보고서,,AI systems backlog greater than 5bn
+HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,ai_backlog,6.1,USD_BN,사용자 HTML 보고서,,AI systems backlog midpoint of 5.9-6.3bn
+HPE,Hewlett Packard Enterprise,AI server OEM,FY26Q2,ai_orders,1.8,USD_BN,사용자 HTML 보고서,,AI systems orders
+AVGO,Broadcom,AI silicon/networking,latest,ai_semiconductor_revenue,10.8,USD_BN,사용자 HTML 보고서,,AI semiconductor revenue
+AVGO,Broadcom,AI silicon/networking,Q3E,ai_semiconductor_revenue,16.0,USD_BN,사용자 HTML 보고서,,Q3 estimate from report
