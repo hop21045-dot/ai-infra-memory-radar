@@ -66,6 +66,56 @@ st.markdown(
 GROUP_LABELS = {company["group"]: company.get("group_ko", company["group"]) for company in COMPANIES}
 METRIC_LABELS = {key: concept["label"] for key, concept in CONCEPTS.items()}
 
+FOCUS_COMPANIES = {
+    "Oracle",
+    "Microsoft",
+    "Alphabet",
+    "Amazon",
+    "Meta",
+    "CoreWeave",
+    "Nebius",
+    "Dell Technologies",
+    "Hewlett Packard Enterprise",
+    "Broadcom",
+    "NVIDIA",
+    "TSMC",
+    "Memory",
+    "AI infrastructure",
+}
+
+HIGH_SIGNAL_TERMS = [
+    "rpo",
+    "backlog",
+    "수주잔고",
+    "orders",
+    "capex",
+    "설비투자",
+    "data center",
+    "데이터센터",
+    "oci",
+    "ai server",
+    "ai systems",
+    "asic",
+    "xpu",
+    "broadcom",
+    "hbm",
+    "dram",
+    "nand",
+    "cowos",
+    "copos",
+    "advanced packaging",
+]
+
+LOW_SIGNAL_TERMS = [
+    "목표주가",
+    "투자의견",
+    "헤지펀드",
+    "주가",
+    "관세",
+    "트럼프",
+    "속보",
+]
+
 
 def money(value: float) -> str:
     if pd.isna(value):
@@ -89,6 +139,74 @@ def pct(value: float) -> str:
     if pd.isna(value):
         return "-"
     return f"{value * 100:,.1f}%"
+
+
+def short_text(value: object, limit: int = 170) -> str:
+    text = "" if pd.isna(value) else " ".join(str(value).split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "..."
+
+
+def source_score(row: pd.Series) -> int:
+    text = " ".join(
+        str(row.get(col, ""))
+        for col in ["company", "topic", "channel_summary", "reflected_indicator", "correction"]
+        if not pd.isna(row.get(col, ""))
+    ).lower()
+    score = 0
+    if str(row.get("표시기업", row.get("company", ""))) in FOCUS_COMPANIES:
+        score += 2
+    for term in HIGH_SIGNAL_TERMS:
+        if term.lower() in text:
+            score += 1
+    for term in LOW_SIGNAL_TERMS:
+        if term.lower() in text:
+            score -= 1
+    return max(score, 0)
+
+
+def source_bucket(row: pd.Series) -> str:
+    company = str(row.get("표시기업", row.get("company", "")))
+    text = " ".join(str(row.get(col, "")) for col in ["topic", "channel_summary", "reflected_indicator"]).lower()
+    if company in {"Oracle", "Microsoft", "Alphabet", "Amazon", "Meta"}:
+        return "빅테크"
+    if company in {"CoreWeave", "Nebius"}:
+        return "네오클라우드"
+    if company in {"Dell Technologies", "Hewlett Packard Enterprise"}:
+        return "서버/OEM"
+    if company in {"Broadcom", "NVIDIA"}:
+        return "AI 반도체/네트워킹"
+    if company == "TSMC" or "cowos" in text or "copos" in text or "packaging" in text:
+        return "파운드리/패키징"
+    if company == "Memory" or any(term in text for term in ["hbm", "dram", "nand", "메모리"]):
+        return "메모리"
+    return "기타"
+
+
+def normalize_source_company(row: pd.Series) -> str:
+    company = str(row.get("company", ""))
+    text = " ".join(str(row.get(col, "")) for col in ["topic", "channel_summary", "reflected_indicator"]).lower()
+    if company == "Dell Technologies" and not any(term in text for term in ["dell", "isg", "ai server"]):
+        if any(term in text for term in ["micron", "마이크론", "sk하이닉스", "sk hynix", "samsung", "hbm", "dram", "nand", "메모리"]):
+            return "Memory"
+        if any(term in text for term in ["broadcom", "avgo", "asic", "xpu", "mlcc"]):
+            return "Broadcom"
+        return "AI infrastructure"
+    return company
+
+
+def prepare_sources(data: pd.DataFrame, min_score: int = 3) -> pd.DataFrame:
+    if data.empty:
+        return data.copy()
+    rows = data.copy().fillna("")
+    rows["표시기업"] = rows.apply(normalize_source_company, axis=1)
+    rows["관심점수"] = rows.apply(source_score, axis=1)
+    rows["분류"] = rows.apply(source_bucket, axis=1)
+    rows["요약"] = rows["channel_summary"].map(lambda value: short_text(value, 190))
+    rows["우선순위"] = rows["관심점수"].map(lambda value: "높음" if value >= 6 else "보통" if value >= min_score else "낮음")
+    rows = rows[rows["관심점수"] >= min_score]
+    return rows.sort_values(["관심점수", "date"], ascending=[False, False])
 
 
 def signal_label(score: float) -> str:
@@ -368,6 +486,7 @@ with st.sidebar:
     )
     periods = sorted(metrics["period"].dropna().unique()) if not metrics.empty else []
     selected_periods = st.slider("최근 분기 수", 4, 16, 8)
+    min_source_score = st.slider("관심글 최소 점수", 0, 8, 3)
     st.divider()
     st.write(f"SEC 지표: {'실시간' if mode == 'live' else '샘플'}")
     st.write(f"지표 업데이트: {metrics_updated}")
@@ -382,6 +501,7 @@ if periods:
 
 latest = latest_by_metric(filtered)
 signals = signal_table(latest)
+focused_sources = prepare_sources(source_watchlist, min_source_score)
 
 top_cols = st.columns(4)
 top_cols[0].metric("Oracle RPO", latest_manual_value(manual_quarterly, "ORCL", "rpo"))
@@ -389,7 +509,7 @@ top_cols[1].metric("Dell AI Backlog", latest_manual_value(manual_quarterly, "DEL
 top_cols[2].metric("HPE AI Backlog", latest_manual_value(manual_quarterly, "HPE", "ai_backlog"))
 top_cols[3].metric("Broadcom AI Semi", latest_manual_value(manual_quarterly, "AVGO", "ai_semiconductor_revenue"))
 
-tabs = st.tabs(["리포트", "요약", "회사별 리포트", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "소스 검증", "최신 공시", "방법론"])
+tabs = st.tabs(["리포트", "관심글", "회사별 차트", "지표 비교", "소스 검증", "분기·AI 비교", "최신 공시", "방법론"])
 
 with tabs[0]:
     st.markdown(
@@ -412,13 +532,31 @@ with tabs[0]:
         unsafe_allow_html=True,
     )
 
-    st.subheader("Executive Summary")
+    st.subheader("핵심 지표")
     st.dataframe(report_metric_cards(manual_quarterly), width="stretch", hide_index=True)
 
-    st.subheader("투자 프레임워크")
+    st.subheader("오늘 볼 관심글")
+    if focused_sources.empty:
+        st.info("관심점수 조건에 맞는 글이 없습니다. 사이드바의 관심글 최소 점수를 낮춰보세요.")
+    else:
+        focus_view = focused_sources.head(8)[
+            ["date", "분류", "표시기업", "topic", "요약", "verification_status", "reflected_indicator", "channel_url", "관심점수"]
+        ].rename(
+            columns={
+                "date": "날짜",
+                "표시기업": "기업",
+                "topic": "주제",
+                "verification_status": "검증 상태",
+                "reflected_indicator": "반영 후보 지표",
+                "channel_url": "링크",
+            }
+        )
+        st.dataframe(focus_view, column_config={"링크": st.column_config.LinkColumn("원문")}, width="stretch", hide_index=True)
+
+    st.subheader("지표 흐름")
     st.dataframe(build_chain_snapshot(latest, manual_quarterly), width="stretch", hide_index=True)
 
-    st.subheader("회사별 핵심 차트")
+    st.subheader("핵심 차트")
     col1, col2 = st.columns(2)
     with col1:
         st.caption("Oracle - RPO / Cloud / IaaS")
@@ -464,37 +602,64 @@ with tabs[0]:
         unsafe_allow_html=True,
     )
 
-    st.subheader("최근 소스 검증 큐")
-    if source_watchlist.empty:
-        st.info("소스 검증 큐가 없습니다.")
+with tabs[1]:
+    st.subheader("관심글만 보기")
+    st.caption("텔레그램/뉴스 글 중 AI 인프라, 메모리, 서버/OEM, Broadcom, Oracle RPO 등 투자 프레임과 관련성이 높은 글만 추립니다.")
+    if focused_sources.empty:
+        st.info("조건에 맞는 관심글이 없습니다.")
     else:
-        queue = source_watchlist.sort_values("date", ascending=False).head(6).copy()
-        queue_view = queue[
+        buckets = sorted(focused_sources["분류"].dropna().unique())
+        selected_buckets = st.multiselect("분류", buckets, default=buckets)
+        companies = sorted(focused_sources["표시기업"].dropna().unique())
+        selected_companies = st.multiselect("기업", companies, default=companies)
+        rows = focused_sources[
+            focused_sources["분류"].isin(selected_buckets) & focused_sources["표시기업"].isin(selected_companies)
+        ].copy()
+        st.metric("표시 글 수", len(rows))
+        table = rows[
             [
                 "date",
-                "category",
-                "company",
+                "우선순위",
+                "관심점수",
+                "분류",
+                "표시기업",
                 "topic",
+                "요약",
                 "verification_status",
+                "correction",
                 "reflected_indicator",
-                "action",
                 "channel_url",
             ]
         ].rename(
             columns={
                 "date": "날짜",
-                "category": "소스",
-                "company": "기업",
+                "표시기업": "기업",
                 "topic": "주제",
                 "verification_status": "검증 상태",
-                "reflected_indicator": "반영 지표",
-                "action": "다음 작업",
+                "correction": "검증/수정 메모",
+                "reflected_indicator": "반영 후보 지표",
                 "channel_url": "링크",
             }
         )
-        st.dataframe(queue_view, column_config={"링크": st.column_config.LinkColumn("원문")}, width="stretch", hide_index=True)
+        st.dataframe(table, column_config={"링크": st.column_config.LinkColumn("원문")}, width="stretch", hide_index=True)
 
-with tabs[1]:
+with tabs[2]:
+    st.subheader("회사별 차트")
+    st.write("검증된 실적발표/컨퍼런스콜 숫자만 분기별 차트로 관리합니다.")
+    report_options = {
+        "Oracle: RPO / Cloud / IaaS": ("ORCL", ["rpo", "cloud_revenue", "iaas_revenue"]),
+        "Dell: AI 서버 vs 전통 서버": ("DELL", ["ai_server_revenue", "traditional_server_revenue"]),
+        "HPE: AI 매출 vs AI 수주잔고": ("HPE", ["ai_revenue", "ai_backlog"]),
+    }
+    selected_report = st.radio("차트", list(report_options.keys()), horizontal=True)
+    ticker, indicators = report_options[selected_report]
+    chart = chart_from_series(report_series, ticker, indicators)
+    if chart.empty:
+        st.info("리포트 시계열이 없습니다.")
+    else:
+        st.bar_chart(chart, width="stretch")
+
+with tabs[3]:
     st.subheader("메모리 수요 시그널")
     st.caption("가중 YoY 점수는 빠른 스크리닝용 온도계입니다. 투자 결론이 아니라 변화 방향을 보기 위한 보조 지표입니다.")
     if signals.empty:
@@ -539,54 +704,6 @@ with tabs[1]:
                         table[col] = table[col].map(money)
                     st.dataframe(table, width="stretch")
 
-with tabs[2]:
-    st.subheader("Dell - 서버 매출 구조")
-    st.write("AI 서버 매출이 전통 서버/스토리지와 다른 기울기로 올라오는지 봅니다. 공식 실적발표·컨퍼런스콜에서 검증한 수치를 분기별로 누적 관리합니다.")
-    dell_chart = chart_from_series(report_series, "DELL", ["ai_server_revenue", "traditional_server_revenue"])
-    if dell_chart.empty:
-        st.info("Dell 리포트 시계열이 없습니다.")
-    else:
-        st.line_chart(dell_chart, width="stretch")
-    st.markdown(
-        """
-        **투자 포인트:** Dell 서버 매출은 하이퍼스케일러향 비중이 낮고 자체 서버 설계 노출도가 높아 AI 서버 수요를 비교적 직접적으로 보여줍니다.
-
-        **메모리 연결:** AI 서버 한 대당 HBM, DDR5/RDIMM, eSSD 탑재량이 커지므로 AI 서버 매출과 수주잔고가 메모리 수요의 중간 검증 지표가 됩니다.
-        """
-    )
-
-    st.subheader("HPE - AI 매출 vs 수주잔고")
-    hpe_chart = chart_from_series(report_series, "HPE", ["ai_revenue", "ai_backlog"])
-    if hpe_chart.empty:
-        st.info("HPE 리포트 시계열이 없습니다.")
-    else:
-        st.bar_chart(hpe_chart, width="stretch")
-    st.markdown(
-        """
-        **투자 포인트:** HPE는 Dell처럼 순수 AI 서버 출하만 보기보다 enterprise/sovereign AI systems와 networking attach를 같이 봐야 합니다.
-
-        **메모리 연결:** AI systems 수주잔고가 매출보다 빠르게 쌓이면, 이후 서버 DRAM/eSSD와 네트워킹 부품 수요로 전환될 가능성이 커집니다.
-        """
-    )
-
-    st.subheader("Oracle - RPO가 먼저 움직인다")
-    oracle_chart = chart_from_series(report_series, "ORCL", ["rpo", "cloud_revenue", "iaas_revenue"])
-    if oracle_chart.empty:
-        st.info("Oracle 리포트 시계열이 없습니다.")
-    else:
-        st.bar_chart(oracle_chart, width="stretch")
-    st.markdown(
-        """
-        **왜 RPO가 중요한가:** Oracle은 AI 인프라 계약이 먼저 RPO로 쌓이고, 데이터센터와 GPU capacity가 준비되면서 OCI/IaaS 매출로 전환됩니다.
-
-        **정정:** Oracle RPO가 없는 것이 아닙니다. 자동 SEC XBRL 태그로 안정적으로 잡히지 않아서, 실적발표/컨퍼런스콜 기반 수동 지표로 따로 관리하는 것이 맞습니다.
-        """
-    )
-
-    st.subheader("부품 병목 체크")
-    st.warning("수요는 여전히 공급을 초과하고 있으며, 주요 제약 요인은 메모리입니다. 특히 DRAM, NAND, CPU/마이크로프로세서, 스토리지 부품 코멘트를 추적해야 합니다.")
-
-with tabs[3]:
     st.subheader("AI 인프라 투자 체인")
     st.write("RPO/수주잔고 -> CAPEX 집행 -> 서버/OEM 전환 -> ASIC/네트워킹 -> 메모리 실적으로 이어지는지 확인합니다.")
     st.dataframe(build_chain_snapshot(latest, manual_quarterly), width="stretch", hide_index=True)
@@ -602,6 +719,62 @@ with tabs[3]:
         st.dataframe(comparison, width="stretch")
 
 with tabs[4]:
+    st.subheader("소스 검증")
+    st.write(
+        "관심점수 기준으로 한 번 거른 뒤, 공식 실적자료/IR 자료/컨퍼런스콜로 확인할 글만 검증 큐에 남깁니다."
+    )
+    display_sources = focused_sources if not focused_sources.empty else prepare_sources(source_watchlist, 0)
+    if display_sources.empty:
+        st.info("source_watchlist.csv에 등록된 소스가 없습니다.")
+    else:
+        status_options = sorted(display_sources["verification_status"].dropna().unique())
+        selected_status = st.multiselect("검증 상태", status_options, default=status_options)
+        source_options = sorted(display_sources["category"].dropna().unique())
+        selected_source_types = st.multiselect("소스 유형", source_options, default=source_options)
+        source_rows = display_sources[
+            display_sources["verification_status"].isin(selected_status)
+            & display_sources["category"].isin(selected_source_types)
+        ].copy()
+        source_rows = source_rows.sort_values(["관심점수", "date"], ascending=[False, False])
+        view = source_rows.rename(
+            columns={
+                "date": "날짜",
+                "category": "소스",
+                "표시기업": "기업",
+                "ticker": "티커",
+                "topic": "주제",
+                "channel_summary": "원문 요약",
+                "channel_url": "링크",
+                "official_material": "공식 확인 자료",
+                "official_url": "공식자료 링크",
+                "verification_status": "검증 상태",
+                "correction": "검증/수정 메모",
+                "reflected_indicator": "반영 후보 지표",
+                "action": "다음 작업",
+            }
+        )
+        st.dataframe(
+            view[
+                [
+                    "날짜",
+                    "관심점수",
+                    "분류",
+                    "소스",
+                    "기업",
+                    "주제",
+                    "요약",
+                    "검증 상태",
+                    "검증/수정 메모",
+                    "반영 후보 지표",
+                    "링크",
+                ]
+            ],
+            column_config={"링크": st.column_config.LinkColumn("원문")},
+            width="stretch",
+            hide_index=True,
+        )
+
+with tabs[5]:
     st.subheader("SEC 자동 지표 비교")
     chart_metric = st.selectbox(
         "차트 지표",
@@ -639,7 +812,6 @@ with tabs[4]:
         rows["표시값"] = rows.apply(lambda row: format_manual_value(row["value"], row["unit"]), axis=1)
         st.dataframe(rows[["ticker", "company", "period", "indicator", "표시값", "source", "note"]], width="stretch", hide_index=True)
 
-with tabs[5]:
     st.subheader("Dell / HPE / Broadcom AI vs 비AI")
     st.write("Dell과 HPE는 AI 주문·수주잔고 중심으로, Broadcom은 AI 반도체 매출과 비AI 반도체 매출로 분리해서 봅니다.")
     split_rows = ai_non_ai_rows(manual_quarterly)
@@ -657,60 +829,6 @@ with tabs[5]:
             st.bar_chart(chart, width="stretch")
 
 with tabs[6]:
-    st.subheader("텔레그램/뉴스/기업 코멘트 검증")
-    st.write(
-        "텔레그램과 뉴스는 아이디어 발견용 소스로 관리합니다. 차트와 분기별 지표에는 공식 실적자료, IR 자료, 컨퍼런스콜 transcript로 확인한 값만 반영합니다."
-    )
-    if source_watchlist.empty:
-        st.info("source_watchlist.csv에 등록된 소스가 없습니다.")
-    else:
-        status_options = sorted(source_watchlist["verification_status"].dropna().unique())
-        selected_status = st.multiselect("검증 상태", status_options, default=status_options)
-        source_options = sorted(source_watchlist["category"].dropna().unique())
-        selected_source_types = st.multiselect("소스 유형", source_options, default=source_options)
-        source_rows = source_watchlist[
-            source_watchlist["verification_status"].isin(selected_status)
-            & source_watchlist["category"].isin(selected_source_types)
-        ].copy()
-        source_rows = source_rows.sort_values(["date", "company"], ascending=[False, True])
-        view = source_rows.rename(
-            columns={
-                "date": "날짜",
-                "category": "소스",
-                "company": "기업",
-                "ticker": "티커",
-                "topic": "주제",
-                "channel_summary": "채널/뉴스 요약",
-                "channel_url": "채널/뉴스 링크",
-                "official_material": "공식 확인 자료",
-                "official_url": "공식자료 링크",
-                "verification_status": "검증 상태",
-                "correction": "검증/수정 메모",
-                "reflected_indicator": "반영 지표",
-                "action": "다음 작업",
-            }
-        )
-        st.dataframe(
-            view,
-            column_config={
-                "채널/뉴스 링크": st.column_config.LinkColumn("채널/뉴스"),
-                "공식자료 링크": st.column_config.LinkColumn("공식자료"),
-            },
-            width="stretch",
-            hide_index=True,
-        )
-
-    st.subheader("운영 원칙")
-    st.markdown(
-        """
-        - 텔레그램 글 전문은 복사하지 않고 짧은 요약과 링크만 보관합니다.
-        - 숫자는 공식자료 확인 전까지 차트에 반영하지 않습니다.
-        - 공식자료와 채널 글이 다르면 `검증/수정 메모`에 차이를 적고 공식자료 기준으로 수정합니다.
-        - 검증이 끝난 숫자만 `manual_quarterly_indicators.csv` 또는 `company_report_series.csv`에 반영합니다.
-        """
-    )
-
-with tabs[7]:
     st.subheader("최신 SEC 공시")
     if filings.empty:
         st.info("표시할 최근 공시가 없습니다.")
@@ -732,11 +850,16 @@ with tabs[7]:
         )
         st.dataframe(filing_display, column_config={"링크": st.column_config.LinkColumn("SEC 문서")}, width="stretch", hide_index=True)
 
-with tabs[8]:
+with tabs[7]:
     st.subheader("데이터 원칙")
     st.write(
         "자동 SEC XBRL은 총매출, CAPEX, 일부 재고처럼 표준화된 재무항목에 적합합니다. 반면 Oracle RPO, Dell/HPE AI 수주잔고, "
         "Broadcom AI 반도체 매출처럼 회사가 컨퍼런스콜이나 실적발표에서 설명하는 항목은 수동 분기 지표로 관리합니다."
+    )
+    st.subheader("관심글 필터")
+    st.write(
+        "텔레그램 글은 회사명, RPO/backlog/CAPEX/AI 서버/HBM/DRAM/NAND/ASIC/패키징 키워드로 관심점수를 계산합니다. "
+        "목표주가, 단순 수급, 정치성 코멘트는 점수를 낮춰 별도 검증 우선순위에서 제외합니다."
     )
     st.subheader("Oracle RPO")
     st.write(

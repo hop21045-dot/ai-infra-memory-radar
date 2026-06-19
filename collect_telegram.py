@@ -28,7 +28,7 @@ WATCHLIST_COLUMNS = [
 
 KEYWORDS = {
     "Oracle": ["oracle", "orcl", "oci", "rpo"],
-    "Dell Technologies": ["dell", "델", "isg", "ai server"],
+    "Dell Technologies": ["dell", "dell technologies", "isg", "ai server"],
     "Hewlett Packard Enterprise": ["hpe", "hewlett", "ai systems", "greenlake"],
     "Broadcom": ["broadcom", "avgo", "브로드컴", "asic", "xp u", "xpu"],
     "NVIDIA": ["nvidia", "nvda", "엔비디아", "gpu", "blackwell", "feynman"],
@@ -36,6 +36,30 @@ KEYWORDS = {
     "Memory": ["hbm", "dram", "nand", "memory", "메모리", "sk hynix", "samsung", "micron"],
     "AI infrastructure": ["data center", "datacenter", "데이터센터", "capex", "backlog", "ai infrastructure"],
 }
+
+HIGH_SIGNAL_TERMS = [
+    "rpo",
+    "backlog",
+    "수주잔고",
+    "orders",
+    "capex",
+    "설비투자",
+    "data center",
+    "데이터센터",
+    "oci",
+    "ai server",
+    "ai systems",
+    "asic",
+    "xpu",
+    "hbm",
+    "dram",
+    "nand",
+    "cowos",
+    "copos",
+    "advanced packaging",
+]
+
+LOW_SIGNAL_TERMS = ["목표주가", "투자의견", "헤지펀드", "주가", "관세", "트럼프"]
 
 TICKERS = {
     "Oracle": "ORCL",
@@ -73,17 +97,27 @@ def load_channels(path: Path = Path("telegram_channels.csv")) -> list[Channel]:
     return [Channel(row["channel"], row.get("display_name", row["channel"])) for _, row in rows.iterrows()]
 
 
-def classify_message(text: str) -> tuple[str, str, str, str]:
+def score_message(text: str, company: str) -> int:
+    lower = text.lower()
+    score = 2 if company else 0
+    score += sum(1 for term in HIGH_SIGNAL_TERMS if term.lower() in lower)
+    score -= sum(1 for term in LOW_SIGNAL_TERMS if term.lower() in lower)
+    return max(score, 0)
+
+
+def classify_message(text: str) -> tuple[str, str, str, str, int]:
     lower = text.lower()
     matches = []
     for company, words in KEYWORDS.items():
-        if any(word.lower() in lower for word in words):
-            matches.append(company)
+        hit_count = sum(1 for word in words if word.lower() in lower)
+        if hit_count:
+            matches.append((company, hit_count))
     if not matches:
-        return "", "", "", ""
-    company = matches[0]
+        return "", "", "", "", 0
+    matches.sort(key=lambda item: (score_message(text, item[0]), item[1]), reverse=True)
+    company = matches[0][0]
     ticker = TICKERS.get(company, "")
-    topic = " / ".join(matches[:3])
+    topic = " / ".join(company for company, _ in matches[:3])
     indicators = []
     if any(word in lower for word in ["rpo", "backlog", "수주잔고"]):
         indicators.append("rpo/backlog")
@@ -93,7 +127,7 @@ def classify_message(text: str) -> tuple[str, str, str, str]:
         indicators.append("revenue")
     if any(word in lower for word in ["hbm", "dram", "nand", "메모리"]):
         indicators.append("memory_comment")
-    return company, ticker, topic, "; ".join(indicators) or "company_comment"
+    return company, ticker, topic, "; ".join(indicators) or "company_comment", score_message(text, company)
 
 
 def compact_summary(text: str, max_len: int = 240) -> str:
@@ -133,8 +167,8 @@ async def collect(args: argparse.Namespace) -> int:
                 text = message.message or ""
                 if not text.strip():
                     continue
-                company, ticker, topic, reflected = classify_message(text)
-                if not topic:
+                company, ticker, topic, reflected, relevance_score = classify_message(text)
+                if not topic or relevance_score < args.min_score:
                     continue
                 msg_date = message.date.astimezone(timezone.utc).date().isoformat()
                 url = f"https://t.me/{channel.channel}/{message.id}"
@@ -177,6 +211,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", default="source_watchlist.csv")
     parser.add_argument("--session", default="telegram_collector")
     parser.add_argument("--limit", type=int, default=80)
+    parser.add_argument("--min-score", type=int, default=3)
     return parser.parse_args()
 
 
