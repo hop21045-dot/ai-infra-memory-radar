@@ -4,3 +4,6 @@ __pycache__/
 work/*.log
 .streamlit/secrets.toml
 .env
+*.session
+*.session-journal
+telegram_collector.session*

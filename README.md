@@ -12,6 +12,8 @@
 - `manual_indicators.csv`에 관리하는 AI 수주잔고/주문 코멘트
 - `manual_quarterly_indicators.csv`에 관리하는 RPO, 수주잔고, AI 주문, NeoCloud CAPEX 같은 수동 분기 지표
 - `company_report_series.csv`에 관리하는 Dell/HPE/Oracle 회사별 리포트형 시계열
+- `source_watchlist.csv`에 관리하는 텔레그램/뉴스/기업 코멘트 검증 큐
+- `telegram_channels.csv`에 관리하는 텔레그램 수집 대상 채널 목록
 
 ## 리포트 업데이트 원칙
 
@@ -21,6 +23,53 @@
 - 수동 관리 지표: Oracle RPO, Dell/HPE AI orders/backlog, Broadcom AI semiconductor revenue, CoreWeave/Nebius CAPEX
 - 자동 보조 지표: SEC XBRL로 안정적으로 잡히는 매출, CAPEX, 재고
 - proxy 또는 추정값은 `note`에 표시하고 확정 수치와 구분합니다.
+
+## 텔레그램/뉴스 소스 관리
+
+텔레그램 채널과 뉴스 기사는 공식 데이터가 아니라 아이디어 발견용 소스로 사용합니다.
+
+1. 텔레그램/뉴스/기업 코멘트를 `source_watchlist.csv`에 등록합니다.
+2. 공식 실적발표자료, IR deck, 10-Q/10-K, 컨퍼런스콜 transcript로 숫자를 검증합니다.
+3. 잘못된 내용이나 표현 차이는 `correction`에 기록합니다.
+4. 검증이 끝난 숫자만 `manual_quarterly_indicators.csv` 또는 `company_report_series.csv`에 반영합니다.
+
+Telegram API를 쓰면 공개 프리뷰보다 안정적으로 채널 히스토리를 조회할 수 있지만, API ID/API Hash와 1회 로그인 인증이 필요합니다. 세션 파일은 개인 계정 권한을 포함하므로 GitHub에 올리면 안 됩니다. 자동화는 로컬 수집 스크립트에서 `source_watchlist.csv`까지 생성하고, 앱은 CSV만 읽는 구조가 안전합니다.
+
+현재 수집 대상 후보:
+
+- `bornlupin` / 루팡 Invest
+- `cahier_de_market` / 카이에 de market
+
+로컬 수집 방식:
+
+```powershell
+pip install telethon pandas
+```
+
+`.env` 파일을 로컬에만 생성합니다.
+
+```text
+TELEGRAM_API_ID=123456
+TELEGRAM_API_HASH=your_api_hash
+```
+
+그 다음 실행합니다.
+
+```powershell
+python collect_telegram.py --limit 100
+```
+
+생성되는 `.session` 파일은 Telegram 로그인 세션이므로 GitHub에 올리면 안 됩니다. `.gitignore`에 제외 규칙을 포함했습니다.
+
+## AI/반도체 뉴스 코멘트
+
+AI 관련 뉴스, 반도체 뉴스, 기업 코멘트도 `source_watchlist.csv`에 같은 방식으로 관리합니다.
+
+- 뉴스/텔레그램 글: 수요 신호, 리스크, 아이디어 발견
+- 공식자료: 숫자 확정, 오류 수정, 차트 반영 기준
+- Streamlit 표시: 짧은 요약, 링크, 공식자료 검증 상태, 수정 메모, 반영 지표
+
+뉴스 전문을 복사하지 않고 요약과 링크만 저장합니다. 수치가 포함된 뉴스는 공식자료 또는 원문 기사로 재확인한 뒤 차트 CSV에 반영합니다.
 
 ## 데이터 업데이트
 

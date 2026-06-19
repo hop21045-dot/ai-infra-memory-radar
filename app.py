@@ -276,6 +276,29 @@ def cached_report_series() -> pd.DataFrame:
         return pd.DataFrame(columns=["company", "ticker", "period", "indicator", "value", "unit", "source", "note"])
 
 
+@st.cache_data(ttl=300, show_spinner=False)
+def cached_source_watchlist() -> pd.DataFrame:
+    columns = [
+        "date",
+        "category",
+        "company",
+        "ticker",
+        "topic",
+        "channel_summary",
+        "channel_url",
+        "official_material",
+        "official_url",
+        "verification_status",
+        "correction",
+        "reflected_indicator",
+        "action",
+    ]
+    try:
+        return pd.read_csv("source_watchlist.csv")
+    except FileNotFoundError:
+        return pd.DataFrame(columns=columns)
+
+
 def chart_from_series(series: pd.DataFrame, ticker: str, indicators: list[str]) -> pd.DataFrame:
     rows = series[(series["ticker"] == ticker) & (series["indicator"].isin(indicators))].copy()
     if rows.empty:
@@ -328,6 +351,7 @@ metrics, mode, metrics_updated = cached_metrics()
 filings, filings_updated = cached_filings()
 manual_quarterly = cached_manual_quarterly()
 report_series = cached_report_series()
+source_watchlist = cached_source_watchlist()
 
 st.title("AI 인프라 메모리 레이더")
 st.caption("CAPEX만 보지 않고 RPO/수주잔고, 서버 매출, AI 반도체 매출, 메모리 병목 코멘트를 함께 추적합니다.")
@@ -365,7 +389,7 @@ top_cols[1].metric("Dell AI Backlog", latest_manual_value(manual_quarterly, "DEL
 top_cols[2].metric("HPE AI Backlog", latest_manual_value(manual_quarterly, "HPE", "ai_backlog"))
 top_cols[3].metric("Broadcom AI Semi", latest_manual_value(manual_quarterly, "AVGO", "ai_semiconductor_revenue"))
 
-tabs = st.tabs(["리포트", "요약", "회사별 리포트", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "최신 공시", "방법론"])
+tabs = st.tabs(["리포트", "요약", "회사별 리포트", "AI 인프라 체인", "분기별 비교", "AI/비AI 분리", "소스 검증", "최신 공시", "방법론"])
 
 with tabs[0]:
     st.markdown(
@@ -439,6 +463,36 @@ with tabs[0]:
         """,
         unsafe_allow_html=True,
     )
+
+    st.subheader("최근 소스 검증 큐")
+    if source_watchlist.empty:
+        st.info("소스 검증 큐가 없습니다.")
+    else:
+        queue = source_watchlist.sort_values("date", ascending=False).head(6).copy()
+        queue_view = queue[
+            [
+                "date",
+                "category",
+                "company",
+                "topic",
+                "verification_status",
+                "reflected_indicator",
+                "action",
+                "channel_url",
+            ]
+        ].rename(
+            columns={
+                "date": "날짜",
+                "category": "소스",
+                "company": "기업",
+                "topic": "주제",
+                "verification_status": "검증 상태",
+                "reflected_indicator": "반영 지표",
+                "action": "다음 작업",
+                "channel_url": "링크",
+            }
+        )
+        st.dataframe(queue_view, column_config={"링크": st.column_config.LinkColumn("원문")}, width="stretch", hide_index=True)
 
 with tabs[1]:
     st.subheader("메모리 수요 시그널")
@@ -603,6 +657,60 @@ with tabs[5]:
             st.bar_chart(chart, width="stretch")
 
 with tabs[6]:
+    st.subheader("텔레그램/뉴스/기업 코멘트 검증")
+    st.write(
+        "텔레그램과 뉴스는 아이디어 발견용 소스로 관리합니다. 차트와 분기별 지표에는 공식 실적자료, IR 자료, 컨퍼런스콜 transcript로 확인한 값만 반영합니다."
+    )
+    if source_watchlist.empty:
+        st.info("source_watchlist.csv에 등록된 소스가 없습니다.")
+    else:
+        status_options = sorted(source_watchlist["verification_status"].dropna().unique())
+        selected_status = st.multiselect("검증 상태", status_options, default=status_options)
+        source_options = sorted(source_watchlist["category"].dropna().unique())
+        selected_source_types = st.multiselect("소스 유형", source_options, default=source_options)
+        source_rows = source_watchlist[
+            source_watchlist["verification_status"].isin(selected_status)
+            & source_watchlist["category"].isin(selected_source_types)
+        ].copy()
+        source_rows = source_rows.sort_values(["date", "company"], ascending=[False, True])
+        view = source_rows.rename(
+            columns={
+                "date": "날짜",
+                "category": "소스",
+                "company": "기업",
+                "ticker": "티커",
+                "topic": "주제",
+                "channel_summary": "채널/뉴스 요약",
+                "channel_url": "채널/뉴스 링크",
+                "official_material": "공식 확인 자료",
+                "official_url": "공식자료 링크",
+                "verification_status": "검증 상태",
+                "correction": "검증/수정 메모",
+                "reflected_indicator": "반영 지표",
+                "action": "다음 작업",
+            }
+        )
+        st.dataframe(
+            view,
+            column_config={
+                "채널/뉴스 링크": st.column_config.LinkColumn("채널/뉴스"),
+                "공식자료 링크": st.column_config.LinkColumn("공식자료"),
+            },
+            width="stretch",
+            hide_index=True,
+        )
+
+    st.subheader("운영 원칙")
+    st.markdown(
+        """
+        - 텔레그램 글 전문은 복사하지 않고 짧은 요약과 링크만 보관합니다.
+        - 숫자는 공식자료 확인 전까지 차트에 반영하지 않습니다.
+        - 공식자료와 채널 글이 다르면 `검증/수정 메모`에 차이를 적고 공식자료 기준으로 수정합니다.
+        - 검증이 끝난 숫자만 `manual_quarterly_indicators.csv` 또는 `company_report_series.csv`에 반영합니다.
+        """
+    )
+
+with tabs[7]:
     st.subheader("최신 SEC 공시")
     if filings.empty:
         st.info("표시할 최근 공시가 없습니다.")
@@ -624,7 +732,7 @@ with tabs[6]:
         )
         st.dataframe(filing_display, column_config={"링크": st.column_config.LinkColumn("SEC 문서")}, width="stretch", hide_index=True)
 
-with tabs[7]:
+with tabs[8]:
     st.subheader("데이터 원칙")
     st.write(
         "자동 SEC XBRL은 총매출, CAPEX, 일부 재고처럼 표준화된 재무항목에 적합합니다. 반면 Oracle RPO, Dell/HPE AI 수주잔고, "
